@@ -330,7 +330,7 @@ print(aggregate(data_clean, by=list(cluster=km_res$cluster), mean))
 
 
 # 1. Citim fișierul și verificăm primele rânduri
-data <- read.csv("Date_Complete_Analiza.csv")
+data <- read.csv("Date_Proiect_UE_2021_Final.csv")
 cat("Verificare separator virgulă:\n")
 print(head(data))
 
@@ -379,3 +379,22 @@ if ("VAT_Gap" %in% names(data)) {
 } else {
   stop("❌ EROARE CRITICĂ: Tot nu găsesc coloana 'VAT_Gap'. Te rog deschide fișierul CSV în Notepad și verifică dacă are virgule între valori.")
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
