@@ -12,7 +12,7 @@ library(sandwich)   # Pentru erori standard robuste (Clustered Standard Errors)
 # PASUL 1: ÎNCĂRCAREA ȘI PREGĂTIREA DATELOR
 # ==============================================================================
 # Inlocuieste cu calea catre fisierul tau. Daca e in folderul proiectului, doar numele:
-df <- read_csv("date_proiect.csv") 
+df <- read_csv("panel.csv") 
 
 # Ne asiguram ca nu avem valori lipsa (NA)
 df <- na.omit(df)
