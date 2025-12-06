@@ -383,7 +383,12 @@ comparison_se <- data.frame(
                        summary(model_optim)$coefficients[, "Std. Error"]) / 
                       summary(model_optim)$coefficients[, "Std. Error"]) * 100
 )
-print(round(comparison_se, 4))
+
+# Afișare separată pentru a evita eroarea
+cat("\nVariabile:\n")
+print(comparison_se$Variable)
+cat("\nComparație valori numerice:\n")
+print(round(comparison_se[, -1], 4))  # Exclude coloana Variable
 
 
 # PASUL 9: EVALUAREA CAPACITĂȚII PREDICTIVE
