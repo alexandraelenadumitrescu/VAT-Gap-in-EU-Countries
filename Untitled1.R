@@ -1,165 +1,129 @@
-# --- PASUL 0: Încărcare Pachete OBLIGATORII ---
-# Instalăm pachetele dacă nu există deja
-packages <- c("dplyr", "caret", "car", "lmtest")
-new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
-if(length(new_packages)) install.packages(new_packages)
+# ==============================================================================
+# PROIECT ECONOMETRIE 2025-2026
+# TEMA: Analiza Gap-ului de TVA in tarile UE (2022 si Panel)
+# ==============================================================================
 
-library(dplyr)  # Aici este operatorul %>%
-library(caret)  # Pentru împărțirea datelor Train/Test
-library(car)    # Pentru testul VIF
-library(lmtest) # Pentru teste de heteroscedasticitate
+# 0. INSTALARE SI INCARCARE PACHETE NECESARE
+# ------------------------------------------------------------------------------
+if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(caret)) install.packages("caret")      # Pentru ML si impartire date
+if(!require(corrplot)) install.packages("corrplot") # Matrice corelatie
+if(!require(lmtest)) install.packages("lmtest")     # Teste ipoteze (BP, DW)
+if(!require(car)) install.packages("car")           # VIF
+if(!require(plm)) install.packages("plm")           # Date de tip Panel
+if(!require(glmnet)) install.packages("glmnet")     # Ridge & Lasso (Regularizare)
+if(!require(moments)) install.packages("moments")   # Skewness/Kurtosis
 
-# --- PASUL 1: Pregătirea Datelor ---
-# Citim fișierul (asigură-te că numele e corect)
-data <- read.csv("Date_Proiect_UE_2021_Final.csv")
-rownames(data) <- data$geo
-
-# Selectăm variabilele pentru model
-# Y = VAT_Gap
-# X = GDP, Unemployment, Internet, CPI, Agriculture, VAT_Rate
-model_data <- data %>% 
-  select(VAT_Gap, GDP_per_Capita, Unemployment_Rate, Internet_Access, 
-         CPI, Agriculture_Share, VAT_Rate)
-
-# Logaritmăm PIB-ul (pentru a normaliza distribuția - practică standard)
-model_data$ln_GDP <- log(model_data$GDP_per_Capita)
-# Scoatem PIB-ul brut și păstrăm doar logaritmul
-model_data <- model_data %>% select(-GDP_per_Capita)
-
-# --- PASUL 2: Împărțirea Train / Test (Cerința 2d din PDF) ---
-set.seed(123) # Pentru rezultate identice la fiecare rulare
-
-# Alegem aleatoriu 80% din țări pentru antrenare (cca 22 țări)
-# Restul de 20% (5 țări) rămân ascunse pentru testare
-train_index <- createDataPartition(model_data$VAT_Gap, p = 0.80, list = FALSE)
-train_set <- model_data[train_index, ]
-test_set  <- model_data[-train_index, ]
-
-cat("\n=== Dimensiuni Seturi ===\n")
-cat("Set Antrenare:", nrow(train_set), "țări\n")
-cat("Set Testare:", nrow(test_set), "țări (", rownames(test_set), ")\n")
-
-# --- PASUL 3: Construirea Modelului OLS (Cerința 3a) ---
-# Modelul complet: VAT Gap explicat de toți factorii
-ols_model <- lm(VAT_Gap ~ ., data = train_set)
-
-cat("\n=== Rezultatele Regresiei (Summary) ===\n")
-print(summary(ols_model))
-
-# --- PASUL 4: Diagnosticarea Modelului (Cerința 3b) ---
-
-# A. Verificarea Multicoliniarității (VIF)
-# Dacă VIF > 5 sau 10, avem o problemă (variabilele se repetă)
-cat("\n=== Testul VIF (Multicoliniaritate) ===\n")
-vif_values <- vif(ols_model)
-print(vif_values)
-
-# B. Testul pentru Heteroscedasticitate (Breusch-Pagan)
-# H0: Erorile sunt constante (Homoscedasticitate) - Asta vrem!
-# P-value > 0.05 înseamnă că e bine.
-bp_test <- bptest(ols_model)
-cat("\n=== Testul Breusch-Pagan ===\n")
-print(bp_test)
-
-# C. Normalitatea Reziduurilor (Shapiro-Wilk)
-# H0: Reziduurile sunt distribuite normal - Asta vrem!
-# P-value > 0.05 înseamnă că e bine.
-shapiro_test <- shapiro.test(ols_model$residuals)
-cat("\n=== Testul Shapiro-Wilk (Normalitate) ===\n")
-print(shapiro_test)
-
-# --- PASUL 5: Predicție și Validare (Cerința 3c) ---
-# Facem predicții pe cele 5 țări ascunse (Test Set)
-predictions <- predict(ols_model, newdata = test_set)
-
-# Comparăm Realitatea cu Predicția
-results <- data.frame(
-  Tara = rownames(test_set),
-  Real = test_set$VAT_Gap,
-  Predis = round(predictions, 2),
-  Eroare = round(test_set$VAT_Gap - predictions, 2)
-)
-
-cat("\n=== Performanța pe Setul de Testare ===\n")
-print(results)
-
-# Calculăm RMSE (Root Mean Squared Error)
-rmse_val <- RMSE(predictions, test_set$VAT_Gap)
-r2_adj <- summary(ols_model)$adj.r.squared
-
-cat("\nINDICATORI FINALI DE PERFORMANȚĂ:\n")
-cat("RMSE (Eroarea medie):", round(rmse_val, 2), "puncte procentuale\n")
-cat("R2 Ajustat (Cât explică modelul):", round(r2_adj, 4) * 100, "%\n")
-
-
-
-
-
-
-
-
-
-
-
-
-
-install.packages("glmnet")
-# --- PASUL 6: Optimizarea Modelului (Eliminăm variabilele cu VIF mare) ---
-# Scoatem ln_GDP (VIF mare) și Unemployment_Rate (p-value 0.97 - irelevantă)
-# Păstrăm: Internet, CPI, Agriculture, VAT_Rate
-ols_model_2 <- lm(VAT_Gap ~ Internet_Access + CPI + Agriculture_Share + VAT_Rate, 
-                  data = train_set)
-
-cat("\n=== Rezultate Model OLS Optimizat ===\n")
-print(summary(ols_model_2))
-cat("VIF nou:", vif(ols_model_2), "\n") # Ar trebui să fie toate sub 2-3
-
-# Recalculăm predicțiile cu modelul nou
-pred_2 <- predict(ols_model_2, newdata = test_set)
-rmse_2 <- RMSE(pred_2, test_set$VAT_Gap)
-cat("RMSE Model Optimizat:", round(rmse_2, 2), "\n")
-
-
-# --- PASUL 7: REGULARIZARE (Cerința 5 din PDF - Obligatorie!) ---
-# Vom folosi LASSO și RIDGE pentru a vedea dacă batem OLS-ul
+library(tidyverse)
+library(caret)
+library(corrplot)
+library(lmtest)
+library(car)
+library(plm)
 library(glmnet)
+library(moments)
 
-# Pregătim datele în format matrice (cerut de glmnet)
-x_train <- as.matrix(train_set %>% select(-VAT_Gap))
+# ==============================================================================
+# GENERARE DATE SIMULATE (STERGE ACEASTA PARTE CAND AI DATELE REALE)
+# ==============================================================================
+# Vom crea un dataset pentru cele 27 tari UE, perioada 2015-2022
+set.seed(123)
+tari <- c("AT","BE","BG","CY","CZ","DE","DK","EE","ES","FI","FR","GR","HR","HU",
+          "IE","IT","LT","LU","LV","MT","NL","PL","PT","RO","SE","SI","SK")
+ani <- 2015:2022
+
+# Creare structura panel
+data_panel <- expand.grid(Tara = tari, An = ani)
+
+# Simulare variabile (inlocuieste cu datele reale de pe Eurostat/WorldBank)
+data_panel$VAT_Gap <- runif(nrow(data_panel), 2, 35) # Variabila dependenta (%)
+data_panel$GDP_capita <- runif(nrow(data_panel), 15000, 60000) # PIB/cap
+data_panel$Gov_Effectiveness <- runif(nrow(data_panel), -1, 2) # WGI Index
+data_panel$Tax_Rate <- runif(nrow(data_panel), 15, 27) # Cota standard TVA
+data_panel$Digital_Index <- runif(nrow(data_panel), 30, 90) # DESI Index
+
+# Introducere o corelatie artificiala pentru ca modelul sa aiba sens
+data_panel$VAT_Gap <- 40 - 0.0003 * data_panel$GDP_capita - 
+  4 * data_panel$Gov_Effectiveness + rnorm(nrow(data_panel), 0, 2)
+
+# ==============================================================================
+# APLICATIA 1: MODEL DE REGRESIE TRANSVERSALA (ANUL 2022) [cite: 8]
+# ==============================================================================
+
+# 1.1. Pregatirea datelor (Filtrare an 2022)
+data_2022 <- data_panel %>% filter(An == 2022)
+rownames(data_2022) <- data_2022$Tara # Setam numele randurilor pentru grafice
+
+# 1.2. Analiza Exploratorie (EDA) [cite: 14]
+cat("\n--- Statistici Descriptive (2022) ---\n")
+summary(data_2022)
+
+# Histograma variabila dependenta
+ggplot(data_2022, aes(x = VAT_Gap)) +
+  geom_histogram(binwidth = 2, fill = "steelblue", color = "white") +
+  theme_minimal() +
+  labs(title = "Distributia VAT Gap in UE (2022)", x = "VAT Gap (%)", y = "Frecventa")
+
+# Matricea de corelatie [cite: 16]
+matrice_cor <- cor(data_2022 %>% select(-Tara, -An))
+corrplot(matrice_cor, method = "number", type = "upper", tl.col = "black")
+
+# 1.3. Machine Learning: Clustering (K-Means) [cite: 20]
+# Identificam grupuri de tari (ex: performante vs. neperformante fiscal)
+set.seed(123)
+data_scaled <- scale(data_2022 %>% select(-Tara, -An)) # Standardizare obligatorie
+kmeans_res <- kmeans(data_scaled, centers = 3, nstart = 25)
+
+# Vizualizare Cluster
+fviz_cluster(kmeans_res, data = data_scaled, geom = "point") + 
+  labs(title = "Gruparea tarilor UE pe baza indicatorilor fiscali")
+# Adaugam clusterul in datele originale
+data_2022$Cluster <- as.factor(kmeans_res$cluster)
+
+# 1.4. Impartire Train / Test (75% Train, 25% Test) [cite: 18]
+set.seed(123)
+index_train <- createDataPartition(data_2022$VAT_Gap, p = 0.75, list = FALSE)
+train_set <- data_2022[index_train, ]
+test_set  <- data_2022[-index_train, ]
+
+# 1.5. Modelare Econometrica Clasica (OLS) [cite: 26]
+# Model: VAT_Gap = f(GDP, Gov_Effectiveness, Tax_Rate, Digital)
+model_ols <- lm(VAT_Gap ~ GDP_capita + Gov_Effectiveness + Tax_Rate + Digital_Index, 
+                data = train_set)
+
+cat("\n--- Rezultate Model OLS ---\n")
+summary(model_ols)
+
+# 1.6. Validarea Modelului (Teste de diagnostic) [cite: 28]
+# a) Normalitatea reziduurilor (Shapiro-Wilk)
+shapiro.test(resid(model_ols)) 
+
+# b) Homoscedasticitate (Breusch-Pagan)
+bptest(model_ols)
+
+# c) Multicoliniaritate (VIF - Variance Inflation Factor)
+vif(model_ols)
+
+# 1.7. Predictie si Evaluare Performanta (pe setul de Test) [cite: 29]
+pred_ols <- predict(model_ols, newdata = test_set)
+rmse_ols <- RMSE(pred_ols, test_set$VAT_Gap)
+cat("\nRMSE OLS pe test:", rmse_ols, "\n")
+
+# 1.8. Extindere: Regularizare (Lasso & Ridge) [cite: 35]
+# Aceasta este partea de "Integrarea tehnicilor ML" ceruta la punctul 5
+x_train <- model.matrix(VAT_Gap ~ GDP_capita + Gov_Effectiveness + Tax_Rate + Digital_Index, train_set)[,-1]
 y_train <- train_set$VAT_Gap
-x_test <- as.matrix(test_set %>% select(-VAT_Gap))
-y_test <- test_set$VAT_Gap
+x_test <- model.matrix(VAT_Gap ~ GDP_capita + Gov_Effectiveness + Tax_Rate + Digital_Index, test_set)[,-1]
 
-# A. RIDGE Regression (alpha = 0)
-# Ridge păstrează toate variabilele dar le micșorează influența
-cv_ridge <- cv.glmnet(x_train, y_train, alpha = 0) # Cross-Validation pentru lambda optim
-best_lambda_ridge <- cv_ridge$lambda.min
-ridge_model <- glmnet(x_train, y_train, alpha = 0, lambda = best_lambda_ridge)
-
-# Predicție Ridge
-pred_ridge <- predict(ridge_model, s = best_lambda_ridge, newx = x_test)
-rmse_ridge <- RMSE(pred_ridge, y_test)
-
-# B. LASSO Regression (alpha = 1)
-# Lasso poate elimina complet variabilele inutile (le face coeficientul 0)
+# Model LASSO (alpha = 1)
 cv_lasso <- cv.glmnet(x_train, y_train, alpha = 1)
-best_lambda_lasso <- cv_lasso$lambda.min
-lasso_model <- glmnet(x_train, y_train, alpha = 1, lambda = best_lambda_lasso)
+best_lambda <- cv_lasso$lambda.min
+model_lasso <- glmnet(x_train, y_train, alpha = 1, lambda = best_lambda)
 
-# Predicție Lasso
-pred_lasso <- predict(lasso_model, s = best_lambda_lasso, newx = x_test)
-rmse_lasso <- RMSE(pred_lasso, y_test)
+# Predictie Lasso
+pred_lasso <- predict(model_lasso, s = best_lambda, newx = x_test)
+rmse_lasso <- RMSE(pred_lasso, test_set$VAT_Gap)
 
-
-# --- TABEL COMPARATIV FINAL (Pentru Concluzii) ---
-final_results <- data.frame(
-  Model = c("OLS Initial", "OLS Optimizat", "Ridge (ML)", "Lasso (ML)"),
-  RMSE = c(rmse_val, rmse_2, rmse_ridge, rmse_lasso)
-)
-
-cat("\n=== CLASAMENTUL MODELELOR (Cine prezice cel mai bine?) ===\n")
-print(final_results)
-
-# Afișăm coeficienții aleși de Lasso (ca să vezi ce variabile au supraviețuit)
-cat("\nVariabile selectate de LASSO:\n")
-print(coef(lasso_model))
+cat("\nComparatie Performanta (RMSE): \n")
+cat("OLS:", rmse_ols, "\n")
+cat("Lasso:", rmse_lasso, "\n")
