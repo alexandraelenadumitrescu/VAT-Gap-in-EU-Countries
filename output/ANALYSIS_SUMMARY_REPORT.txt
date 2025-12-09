@@ -1,0 +1,50 @@
+================================================================================
+ECONOMETRIC ANALYSIS: MIMIC-VAT GAP DIVERGENCE IN EU (2015-2022)
+================================================================================
+Project: Decomposing the Gap Between MIMIC-based Shadow Economy Estimates
+         and VAT Gap Data - A Cross-Country Analysis
+Author:  Academic Project 2025-2026
+Date:     December 09, 2025 
+================================================================================
+
+1. DATASET OVERVIEW
+-------------------
+Number of countries: 27 
+Time period: 2015-2022 (8 years)
+Total observations: 216 
+Panel structure: Balanced
+
+Data Sources:
+- MIMIC estimates: Schneider (2022) - Table 1
+- VAT Gap data: EU Commission VAT Gap Reports
+- Self-employment: Eurostat Labor Force Survey
+- Administrative capacity: World Bank Governance Indicators
+- GDP growth: Eurostat/World Bank
+
+2. KEY DESCRIPTIVE FINDINGS
+----------------------------
+Average MIMIC estimate: 17.93% of GDP
+Average VAT Gap: 12.03% of VTTL
+Average Divergence Gap: 0.607
+Average Admin Capacity: 76.7 (0-100 scale)
+
+Countries with highest average divergence:
+  1. Estonia: 2.100
+  2. Sweden: 2.070
+  3. Spain: 1.940
+  4. Croatia: 1.920
+  5. Slovenia: 1.730
+
+3. ECONOMETRIC RESULTS
+----------------------
+Model Selection:
+- Hausman Test p-value: 0.9905
+- Decision: Random Effects acceptable (p >= 0.05)
+- F-test for FE p-value: < 2.2e-16
+
+Fixed Effects Model - Key Findings:
+- R-squared (within): 0.833
+- Observations: 216
+- Countries: 27
+
+Coefficient Estimates (with robust SE):
