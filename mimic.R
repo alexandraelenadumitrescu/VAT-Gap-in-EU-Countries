@@ -1084,6 +1084,8 @@ cat("\n")
 
 cat("Coefficient Estimates (with robust SE):\n")
 coef_summary <- summary(coef_robust)
+# Only use this line if coef_robust is a whole model, not just a matrix
+coef_matrix <- summary(coef_robust)$coefficients
 for(i in 1:nrow(coef_summary)) {
   stars <- ifelse(coef_summary[i, 4] < 0.001, "***",
                   ifelse(coef_summary[i, 4] < 0.01, "**",
