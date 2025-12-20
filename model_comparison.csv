@@ -1,0 +1,6 @@
+"Model","RMSE","MAE","Type"
+"OLS Baseline",1.4627,1.1603,"Explicative"
+"OLS Extended",1.4627,1.1603,"Explicative"
+"Ridge",1.8195,1.7844,"Predictive"
+"Lasso",1.6406,1.3028,"Predictive"
+"Elastic Net",1.4156,1.2197,"Predictive"
