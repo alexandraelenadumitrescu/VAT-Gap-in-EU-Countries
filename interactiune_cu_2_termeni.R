@@ -162,3 +162,134 @@ interact_plot(best_model_final, pred = !!sym(terms[2]), modx = !!sym(terms[3]),
 # Run this on your best_model_final
 # Cook's Distance Plot
 plot(best_model_final, which = 4)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(MASS) # Pachetul standard pentru statistici robuste
+library(lmtest)
+library(sandwich)
+
+# 1. Identificare Outliers (pentru raportare în paper)
+cat("Outlierii identificați prin Cook's Distance > 0.5 sunt:\n")
+cooks_d <- cooks.distance(best_model_final)
+influential_obs <- which(cooks_d > 0.5)
+print(df_final[influential_obs, "Country"])
+
+# 2. Rulare REGRESIE ROBUSTĂ (RLM)
+# Folosim metoda M-estimation cu ponderi Huber sau Bisquare
+# Asta va reduce automat influența obs 4 și 14 fără să le șteargă
+robust_model <- rlm(as.formula(best_formula), data = df_final, method = "MM")
+
+cat("\n--- REZULTATE REGRESIE ROBUSTĂ (RLM) ---\n")
+summary(robust_model)
+
+# 3. Testare semnificație coeficienți (Robust t-test)
+# RLM nu dă p-values standard, trebuie calculate așa:
+coeftest(robust_model, vcov = vcovHC(robust_model, type = "HC3"))
+
+
+# Vizualizare bazată pe modelul ROBUST
+# interact_plot știe să gestioneze obiecte de tip rlm, 
+# dar e bine să specificăm datele originale
+
+plot_robust <- interact_plot(robust_model, 
+                             pred = VAT_Rever, 
+                             modx = Governme,
+                             data = df_final,
+                             plot.points = TRUE,   # Arată punctele
+                             interval = TRUE,      # Intervalele de încredere vor fi mai largi (realiste)
+                             x.label = "VAT Revenues (Centered)",
+                             y.label = "VAT Compliance Gap",
+                             main.title = "Efectul Moderator Robust (RLM)")
+
+# Marcăm vizual outlierii (Opțional, dar de efect)
+# Adăugăm etichete doar pentru Irlanda și Croația pe grafic
+library(ggplot2)
+# Soluția este argumentul inherit.aes = FALSE
+plot_robust + 
+  geom_text(data = df_final[influential_obs, ], 
+            aes(x = VAT_Rever, y = VAT_Comp, label = Country), 
+            nudge_y = 2, 
+            color = "red", 
+            fontface = "bold",
+            inherit.aes = FALSE) # <--- ASTA REZOLVĂ EROAREA
+
+
+
+
+
+
+
+
+
+
+library(boot)
+
+# Define function to return the t-statistic of the interaction term
+interaction_boot <- function(data, indices) {
+  d <- data[indices,] # Allow resampling with replacement
+  fit <- lm(VAT_Comp ~ VAT_Rever * Governme, data = d)
+  return(coef(summary(fit))[4, 3]) # Return t-value of interaction
+}
+
+# Run 1000 bootstraps
+results <- boot(data = df_final, statistic = interaction_boot, R = 1000)
+
+# If the confidence interval includes 0, the interaction is spurious
+boot.ci(results, type = "bca")
+
+
+
+
+# INSTALL IF MISSING
+if(!require(spdep)) install.packages("spdep")
+library(spdep)
+
+# 1. PREPARE COORDINATES
+# Ideally, you load a shapefile, but for N=27 we can use capital coordinates approx.
+# Since we don't have lat/long in your df, we will use a neighbor matrix based on distance implies similarity
+# OR, a simpler method: The "1/Distance" weighting if you have coordinates.
+
+# -- SIMPLIFIED APPROACH FOR PEER REVIEW WITHOUT SHAPEFILES --
+# We check if the residuals are random. If we lack coordinates, 
+# we can visualize residuals by region (West, East, South, North).
+
+# Assuming you DON'T have lat/long columns, we will extract residuals 
+# and look at them sorted by Country Name (weak check) or Region.
+
+# BUT, to do this professionally, I need to know:
+# Do you have a column for "Region" (e.g., CEE, Western Europe, Southern Europe)?
+
+# -- IF YOU WANT TO RUN THE REAL TEST, ADD LAT/LONG --
+# Let's create a dummy spatial weight matrix to demonstrate. 
+# PLEASE UPDATE the lat/long for your actual data if possible.
+
+# Example: Extract residuals from the Robust Model
+df_final$residuals_robust <- residuals(robust_model)
+
+# Quick Visual Check: Are residuals clustered by magnitude?
+# Sort by magnitude
+df_sorted <- df_final[order(df_final$residuals_robust), ]
+barplot(df_sorted$residuals_robust, names.arg=df_sorted$Country, las=2, 
+        main="Residuals of Robust Model (Check for Regional Clusters)",
+        ylab="Residual Value", cex.names=0.7)
+
+# INTERPRETATION:
+# Look at the bar plot. 
+# Do you see all Eastern European countries on one side? 
+# Do you see all Nordic countries on the other?
+# If the residuals look "mixed" (e.g., Romania next to France), you are SAFE.
+# If you see blocks of countries (e.g. RO, BG, HU all negative), you have Spatial Autocorrelation.
