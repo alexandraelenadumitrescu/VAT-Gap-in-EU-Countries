@@ -453,7 +453,7 @@ panel_data <- mimic_data %>%
   filter(!is.na(mimic), !is.na(vat_gap))
 
 # Save complete dataset
-write.csv(panel_data, "data/panel_data_complete.csv", row.names = FALSE)
+write.csv(panel_data, "../data/processed/panel_data_complete.csv", row.names = FALSE)
 cat("✓ Real dataset constructed with", nrow(panel_data), "observations\n")
 
 # ============================================================================
@@ -480,7 +480,7 @@ desc_stats <- panel_data %>%
   mutate(across(where(is.numeric), ~round(., 3)))
 
 print(desc_stats)
-write.csv(desc_stats, "tables/descriptive_statistics.csv", row.names = FALSE)
+write.csv(desc_stats, "../tables/descriptive_statistics.csv", row.names = FALSE)
 
 # 3.2 Summary by country
 country_summary <- panel_data %>%
@@ -497,7 +497,7 @@ country_summary <- panel_data %>%
 
 print("\nTop 10 Countries by Average Divergence:")
 print(head(country_summary, 10))
-write.csv(country_summary, "tables/country_summary.csv", row.names = FALSE)
+write.csv(country_summary, "../tables/country_summary.csv", row.names = FALSE)
 
 # 3.3 Correlation Matrix
 cor_vars <- panel_data %>%
@@ -508,7 +508,7 @@ cor_matrix <- cor(cor_vars, use = "complete.obs")
 print("\nCorrelation Matrix:")
 print(round(cor_matrix, 3))
 
-png("figures/01_correlation_matrix.png", width = 1000, height = 1000, res = 120)
+png("../figures/01_correlation_matrix.png", width = 1000, height = 1000, res = 120)
 corrplot(cor_matrix, method = "color", type = "upper", 
          tl.col = "black", tl.srt = 45, addCoef.col = "black",
          number.cex = 0.7, tl.cex = 0.8,
@@ -541,7 +541,7 @@ p1 <- ggplot(panel_data, aes(x = vat_gap, y = mimic)) +
     legend.position = "right"
   )
 
-ggsave("figures/02_mimic_vs_vatgap_scatter.png", p1, 
+ggsave("../figures/02_mimic_vs_vatgap_scatter.png", p1, 
        width = 12, height = 8, dpi = 300)
 
 # 4.2 Time Evolution by Country Group
@@ -563,7 +563,7 @@ p2 <- panel_data %>%
   ) +
   guides(color = guide_legend(nrow = 3))
 
-ggsave("figures/03_divergence_timeseries.png", p2, 
+ggsave("../figures/03_divergence_timeseries.png", p2, 
        width = 14, height = 10, dpi = 300)
 
 # 4.3 Distribution Histograms
@@ -585,7 +585,7 @@ p3 <- ggplot(p3_data, aes(x = Value, fill = Variable)) +
   theme(legend.position = "none",
         strip.text = element_text(face = "bold"))
 
-ggsave("figures/04_distributions.png", p3, 
+ggsave("../figures/04_distributions.png", p3, 
        width = 12, height = 8, dpi = 300)
 
 # 4.4 Box plots by country group
@@ -601,7 +601,7 @@ p4 <- panel_data %>%
   theme(legend.position = "none",
         axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave("figures/05_boxplot_country_groups.png", p4, 
+ggsave("../figures/05_boxplot_country_groups.png", p4, 
        width = 10, height = 7, dpi = 300)
 
 # ============================================================================
@@ -713,7 +713,7 @@ stargazer(model_pooled, model_fe, model_re, model_fe_covid,
           ),
           omit.stat = c("ser", "f"),
           digits = 3,
-          out = "tables/regression_results.txt")
+          out = "../tables/regression_results.txt")
 
 # HTML output
 stargazer(model_pooled, model_fe, model_re, model_fe_covid,
@@ -729,7 +729,7 @@ stargazer(model_pooled, model_fe, model_re, model_fe_covid,
             c("Country Fixed Effects", "No", "Yes", "No", "Yes")
           ),
           digits = 3,
-          out = "tables/regression_results.html")
+          out = "../tables/regression_results.html")
 
 cat("✓ Regression tables saved\n")
 
@@ -741,7 +741,7 @@ cat("✓ Regression tables saved\n")
 # PART 9: RESIDUAL DIAGNOSTICS (CORRECTED)
 # ============================================================================
 
-png("figures/06_residual_diagnostics.png", width = 1400, height = 1000, res = 120)
+png("../figures/06_residual_diagnostics.png", width = 1400, height = 1000, res = 120)
 
 par(mfrow = c(2, 2))
 
@@ -799,7 +799,7 @@ y_vector <- panel_data[complete.cases(panel_data[, c(X_vars, "divergence_gap")])
 set.seed(2025)
 lasso_cv <- cv.glmnet(X_matrix, y_vector, alpha = 1, nfolds = 10)
 
-png("figures/07_lasso_path.png", width = 1200, height = 800, res = 120)
+png("../figures/07_lasso_path.png", width = 1200, height = 800, res = 120)
 par(mfrow = c(1, 2))
 plot(lasso_cv, main = "Lasso: Cross-Validation")
 plot(lasso_cv$glmnet.fit, xvar = "lambda", label = TRUE,
@@ -815,7 +815,7 @@ print(lasso_coefs)
 # 10.2 Ridge Regression (L2 regularization)
 ridge_cv <- cv.glmnet(X_matrix, y_vector, alpha = 0, nfolds = 10)
 
-png("figures/08_ridge_path.png", width = 1200, height = 800, res = 120)
+png("../figures/08_ridge_path.png", width = 1200, height = 800, res = 120)
 par(mfrow = c(1, 2))
 plot(ridge_cv, main = "Ridge: Cross-Validation")
 plot(ridge_cv$glmnet.fit, xvar = "lambda", label = TRUE,
@@ -844,7 +844,7 @@ comparison_df <- data.frame(
   Lasso = as.numeric(lasso_coefs),
   Ridge = as.numeric(ridge_coefs)
 )
-write.csv(comparison_df, "tables/ml_comparison.csv", row.names = FALSE)
+write.csv(comparison_df, "../tables/ml_comparison.csv", row.names = FALSE)
 
 cat("✓ ML models estimated\n")
 
@@ -891,7 +891,7 @@ p5 <- panel_data %>%
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")
 
-ggsave("figures/09_actual_vs_predicted.png", p5, 
+ggsave("../figures/09_actual_vs_predicted.png", p5, 
        width = 10, height = 8, dpi = 300)
 
 cat("✓ Prediction metrics and plot generated\n")
@@ -951,7 +951,7 @@ country_fe_df <- data.frame(
 cat("\nTop 10 Countries - Fixed Effects:\n")
 print(head(country_fe_df[, c("country", "fixed_effect", "avg_divergence")], 10))
 
-write.csv(country_fe_df, "tables/country_fixed_effects.csv", row.names = FALSE)
+write.csv(country_fe_df, "../tables/country_fixed_effects.csv", row.names = FALSE)
 
 # Visualize country effects
 p7 <- ggplot(country_fe_df, aes(x = reorder(country, fixed_effect), 
@@ -967,7 +967,7 @@ p7 <- ggplot(country_fe_df, aes(x = reorder(country, fixed_effect),
   theme_minimal(base_size = 10) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red")
 
-ggsave("figures/11_country_fixed_effects.png", p7, 
+ggsave("../figures/11_country_fixed_effects.png", p7, 
        width = 10, height = 12, dpi = 300)
 
 # ============================================================================
@@ -1013,7 +1013,7 @@ cat("\nTop 10 Forecasted Divergence for 2023:\n")
 print(head(forecast_results[, c("country", "pred_divergence_2023", 
                                 "forecast_nvt_share")], 10))
 
-write.csv(forecast_results, "tables/forecast_2023.csv", row.names = FALSE)
+write.csv(forecast_results, "../tables/forecast_2023.csv", row.names = FALSE)
 
 # ============================================================================
 # PART 16: FINAL SUMMARY REPORT
@@ -1021,7 +1021,7 @@ write.csv(forecast_results, "tables/forecast_2023.csv", row.names = FALSE)
 
 cat("\n========== GENERATING FINAL REPORT ==========\n")
 
-sink("output/ANALYSIS_SUMMARY_REPORT.txt")
+sink("../output/ANALYSIS_SUMMARY_REPORT.txt")
 
 cat("================================================================================\n")
 cat("ECONOMETRIC ANALYSIS: MIMIC-VAT GAP DIVERGENCE IN EU (2015-2022)\n")
@@ -1249,7 +1249,7 @@ infographic_stats <- list(
   rmse = round(pred_metrics$RMSE, 4)
 )
 
-saveRDS(infographic_stats, "output/infographic_stats.rds")
+saveRDS(infographic_stats, "../output/infographic_stats.rds")
 
 # ============================================================================
 # FINAL MESSAGES

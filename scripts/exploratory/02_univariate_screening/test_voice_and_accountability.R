@@ -2,7 +2,7 @@
 # SCRIPT 4: Political Regime & Voluntary Compliance (Voice & Accountability)
 # ==============================================================================
 
-filename <- "va.csv"
+filename <- "../../../data/raw/voice_and_accountability_index.csv"
 if (!file.exists(filename)) stop("Creeaza fisierul 'eu_politics.csv'!")
 
 df <- read.csv(filename, stringsAsFactors = FALSE)

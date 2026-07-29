@@ -2,7 +2,7 @@
 # SCRIPT 5: Tax Administration Demographics (Aging Workforce)
 # ==============================================================================
 
-filename <- "aged.csv"
+filename <- "../../../data/raw/tax_admin_workforce_aging.csv"
 if (!file.exists(filename)) stop("Please create 'eu_staff_aging.csv' first!")
 
 df <- read.csv(filename, stringsAsFactors = FALSE)

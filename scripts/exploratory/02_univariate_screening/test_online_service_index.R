@@ -2,7 +2,7 @@
 # SCRIPT FINAL - "Chirurgie" pentru Semnificatie Statistica
 # ==============================================================================
 
-filename <- "osi.csv"
+filename <- "../../../data/raw/online_service_index.csv"
 if (!file.exists(filename)) stop("Nu gasesc fisierul!")
 df <- read.csv(filename, stringsAsFactors = FALSE)
 

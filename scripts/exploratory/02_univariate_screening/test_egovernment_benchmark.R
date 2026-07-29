@@ -5,7 +5,7 @@
 # 1. CITIREA DATELOR
 # ------------------
 # Citim direct din fisierul tau. Asigura-te ca fisierul este in Working Directory.
-filename <- "eu_comm_egov.csv"
+filename <- "../../../data/raw/eu_commission_egovernment_benchmark.csv"
 
 if (!file.exists(filename)) {
   stop("EROARE: Nu gasesc fisierul 'eu_comm_egov.csv'. Verifica daca este in folderul corect.")

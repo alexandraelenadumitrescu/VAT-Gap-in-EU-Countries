@@ -2,7 +2,7 @@
 # SCRIPT SALVARE: Analiza de Mediere si Interactiune (Internet Banking)
 # ==============================================================================
 
-filename <- "ib.csv"
+filename <- "../../../data/raw/internet_banking_usage.csv"
 if (!file.exists(filename)) stop("Fisierul 'eu_payments.csv' lipseste!")
 
 df <- read.csv(filename, stringsAsFactors = FALSE)

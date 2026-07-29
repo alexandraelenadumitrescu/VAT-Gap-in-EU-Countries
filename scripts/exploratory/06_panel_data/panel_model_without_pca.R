@@ -8,7 +8,7 @@ library(psych)
 
 # 1. Load the data 
 # Make sure the file "Project Econometrie 2025-2026.csv" is in your specific working directory
-data_full <- read_csv("panel.csv")
+data_full <- read_csv("../../../data/raw/panel_data_variables.csv")
 
 # --- STEP 1: Filter for Cross-Sectional Analysis (Year 2022) ---
 # Requirement: Analyze a phenomenon at a specific moment (Application 1)

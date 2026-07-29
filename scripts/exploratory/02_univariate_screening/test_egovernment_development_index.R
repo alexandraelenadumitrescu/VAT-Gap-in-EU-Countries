@@ -3,7 +3,7 @@
 # ==============================================================================
 
 # 1. CITIREA DATELOR
-filename <- "egdi.csv"
+filename <- "../../../data/raw/egovernment_development_index.csv"
 
 if (!file.exists(filename)) {
   stop("EROARE: Nu gasesc fisierul 'eu_comm_egov.csv'.")

@@ -2,7 +2,7 @@
 # SCRIPT FINAL - Testare CPI si DESI
 # ==============================================================================
 
-filename <- "cpi_desi.csv"
+filename <- "../../../data/raw/cpi_and_desi_indicators.csv"
 if (!file.exists(filename)) stop("Nu gasesc fisierul 'eu_comm_egov.csv'!")
 
 df <- read.csv(filename, stringsAsFactors = FALSE)

@@ -2,7 +2,7 @@
 # SCRIPT ANALIZA: Human Capital (Educatie Digitala) + Optimizare
 # ==============================================================================
 
-filename <- "tii_hci.csv"
+filename <- "../../../data/raw/human_capital_index.csv"
 if (!file.exists(filename)) stop("Nu gasesc fisierul 'eu_comm_egov.csv'!")
 
 df <- read.csv(filename, stringsAsFactors = FALSE)
