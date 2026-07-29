@@ -2,7 +2,7 @@
 # SCRIPT FINAL: Platile Electronice (Internet Banking)
 # ==============================================================================
 
-filename <- "card.csv"
+filename <- "../../../data/raw/electronic_payments_card_usage.csv"
 
 if (!file.exists(filename)) {
   stop("Te rog creeaza fisierul 'eu_payments.csv' cu datele de mai sus!")

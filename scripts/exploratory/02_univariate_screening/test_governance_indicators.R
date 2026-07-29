@@ -2,7 +2,7 @@
 # SCRIPT 3: Tax Administration Enforcement (Capacitate Administrativa)
 # ==============================================================================
 
-filename <- "wgi.csv"
+filename <- "../../../data/raw/worldwide_governance_indicators.csv"
 if (!file.exists(filename)) stop("Creeaza fisierul 'eu_enforcement.csv'!")
 
 df <- read.csv(filename, stringsAsFactors = FALSE)
